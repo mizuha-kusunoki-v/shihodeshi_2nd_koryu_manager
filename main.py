@@ -3,15 +3,30 @@ import itertools
 import json
 import os
 import random
+import secrets
 from collections import defaultdict
 from pathlib import Path
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 app = FastAPI()
+
+# Basic認証（環境変数 ADMIN_USER / ADMIN_PASS で設定）
+_basic = HTTPBasic()
+
+def verify_admin(credentials: HTTPBasicCredentials = Depends(_basic)):
+    ok_user = secrets.compare_digest(credentials.username, os.getenv("ADMIN_USER", "admin"))
+    ok_pass = secrets.compare_digest(credentials.password, os.getenv("ADMIN_PASS", "changeme"))
+    if not (ok_user and ok_pass):
+        raise HTTPException(
+            status_code=401,
+            detail="認証が必要です",
+            headers={"WWW-Authenticate": "Basic"},
+        )
 
 app.add_middleware(
     CORSMiddleware,
@@ -291,7 +306,7 @@ async def import_excel(file: UploadFile = File(...)):
 
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin():
+def admin(_: None = Depends(verify_admin)):
     return Path("static/admin.html").read_text(encoding="utf-8")
 
 
@@ -302,4 +317,4 @@ def obs():
 
 @app.get("/", response_class=HTMLResponse)
 def root():
-    return '<meta http-equiv="refresh" content="0; url=/admin">'
+    return '<meta http-equiv="refresh" content="0; url=/obs">'
