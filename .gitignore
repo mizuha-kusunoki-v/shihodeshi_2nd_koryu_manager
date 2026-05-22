@@ -1,0 +1,28 @@
+# 状態ファイル（配信ごとにリセットするため除外）
+state.json
+
+# サーバーログ
+server_out.txt
+server_err.txt
+
+# 仕様書展開フォルダ
+spec_unpacked/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# 環境変数
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

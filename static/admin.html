@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>師匠弟子杯 管理画面</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --master: #f97316;
+    --disciple: #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 { font-size: 18px; color: var(--blue); letter-spacing: 0.05em; }
+  header .mode-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  header .mode-badge.disciple { background: rgba(56,189,248,0.15); color: var(--disciple); border: 1px solid var(--disciple); }
+  header .mode-badge.master { background: rgba(249,115,22,0.15); color: var(--master); border: 1px solid var(--master); }
+  #match-counter { margin-left: auto; color: var(--muted); font-size: 13px; }
+  #obs-link { color: var(--blue); font-size: 12px; text-decoration: none; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; }
+  #obs-link:hover { background: var(--bg3); }
+
+  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 16px; padding: 16px 24px; }
+
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .panel h2 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+  /* 参加者パネル */
+  .participant-form { display: flex; gap-6: 8px; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .participant-form .row { display: flex; gap: 6px; }
+  .participant-form input, .participant-form select {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 10px; border-radius: 6px; font-size: 13px; width: 100%;
+  }
+  .participant-form select { width: auto; flex-shrink: 0; }
+  .btn {
+    padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-blue { background: var(--blue); color: #0d1117; }
+  .btn-green { background: var(--green); color: #0d1117; }
+  .btn-orange { background: var(--orange); color: #0d1117; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-purple { background: var(--purple); color: #0d1117; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+  #participant-list { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; }
+  .participant-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; border-radius: 6px; background: var(--bg3);
+    font-size: 13px;
+  }
+  .participant-item .name { font-weight: 600; }
+  .tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .tag.master { background: rgba(249,115,22,0.2); color: var(--master); }
+  .tag.disciple { background: rgba(56,189,248,0.2); color: var(--disciple); }
+  .appearances { color: var(--muted); font-size: 12px; margin-left: auto; margin-right: 8px; }
+  .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+
+  /* メイン右カラム */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* 試合管理 */
+  .match-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+
+  .current-match-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .current-match-card .match-label {
+    font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;
+  }
+  .teams { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
+  .team-box { background: var(--bg2); border-radius: 8px; padding: 12px; }
+  .team-box h3 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .team-box .players { display: flex; flex-direction: column; gap: 4px; }
+  .player-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .vs { font-size: 20px; font-weight: 900; color: var(--muted); text-align: center; }
+
+  .winner-select { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+  .winner-select label { font-size: 13px; color: var(--muted); }
+  .winner-select select {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 10px; border-radius: 6px; font-size: 13px;
+  }
+
+  /* 状況確認 */
+  #appearances-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .appear-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: var(--bg3); border-radius: 6px; font-size: 13px; }
+  .appear-item .bar-wrap { flex: 1; background: var(--bg); height: 6px; border-radius: 3px; overflow: hidden; }
+  .appear-item .bar { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .appear-item.master-row .bar { background: var(--master); }
+  .appear-item.disciple-row .bar { background: var(--disciple); }
+  .appear-count { font-weight: 700; color: var(--text); min-width: 20px; text-align: right; font-size: 12px; }
+
+  /* 試合履歴 */
+  #history-list { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+  .history-item { font-size: 12px; color: var(--muted); padding: 4px 8px; background: var(--bg3); border-radius: 4px; }
+  .history-item .winner-mark { color: var(--green); font-weight: 700; }
+
+  /* モード切替 */
+  .mode-switch { display: flex; gap: 8px; align-items: center; }
+
+  /* トースト */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 18px; border-radius: 8px;
+    font-size: 13px; display: none; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  #toast.show { display: block; }
+
+  .section-gap { margin-bottom: 14px; }
+
+  .import-area { margin-bottom: 14px; }
+  .import-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; padding: 12px; border: 1px dashed var(--border); border-radius: 8px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s; text-align: center;
+    font-size: 12px; color: var(--muted);
+  }
+  .import-label:hover, .import-label.drag-over {
+    border-color: var(--blue); background: rgba(88,166,255,0.06); color: var(--blue);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎮 師匠弟子杯 管理画面</h1>
+  <span id="mode-badge" class="mode-badge disciple">弟子戦モード</span>
+  <span id="match-counter">第0試合</span>
+  <a href="/obs" target="_blank" id="obs-link">OBS表示 →</a>
+</header>
+
+<div class="layout">
+  <!-- 左: 参加者管理 -->
+  <div>
+    <div class="panel">
+      <h2>参加者管理</h2>
+      <div class="participant-form">
+        <div class="row">
+          <input id="p-name" type="text" placeholder="名前を入力">
+          <select id="p-role">
+            <option value="disciple">弟子</option>
+            <option value="master">師匠</option>
+          </select>
+        </div>
+        <button class="btn btn-blue" onclick="addParticipant()">追加</button>
+      </div>
+
+      <div class="import-area">
+        <label class="import-label" id="import-label" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+          <span>📋 Excelファイルをドロップ</span>
+          <span style="font-size:11px;color:var(--muted);">または クリックして選択</span>
+          <input type="file" id="excel-file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this.files[0])">
+        </label>
+      </div>
+      <ul id="participant-list"></ul>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>状況確認</h2>
+      <ul id="appearances-list"></ul>
+    </div>
+  </div>
+
+  <!-- 右: 試合管理 -->
+  <div class="right-col">
+    <div class="panel">
+      <h2>試合管理</h2>
+
+      <div class="match-actions">
+        <button class="btn btn-disciple btn-blue" onclick="nextDisciple()">弟子戦メンバー決定</button>
+        <button class="btn btn-orange" onclick="nextMaster()">師匠戦メンバー決定</button>
+      </div>
+
+      <div id="current-match-area">
+        <div style="color:var(--muted);font-size:13px;padding:20px;text-align:center;">
+          ↑ ボタンを押すと次の試合メンバーが表示されます
+        </div>
+      </div>
+
+      <div class="winner-select section-gap" id="confirm-area" style="display:none;">
+        <label>勝利チーム:</label>
+        <select id="winner-select">
+          <option value="1">チーム1</option>
+          <option value="2">チーム2</option>
+        </select>
+        <button class="btn btn-green" onclick="confirmMatch()">試合確定</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>表示モード切替</h2>
+      <div class="mode-switch">
+        <button class="btn btn-blue" onclick="setMode('disciple')">弟子戦モード</button>
+        <button class="btn btn-orange" onclick="setMode('master')">師匠戦モード</button>
+        <button class="btn btn-red" style="margin-left:auto;" onclick="resetAll()">全リセット</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>試合履歴</h2>
+      <ul id="history-list">
+        <li style="color:var(--muted);font-size:12px;padding:4px 8px;">履歴なし</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let state = null;
+let currentMatch = null;
+
+function toast(msg, ok = true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ detail: r.statusText }));
+    throw new Error(err.detail || r.statusText);
+  }
+  return r.json();
+}
+
+async function loadState() {
+  state = await api('/api/state');
+  renderAll();
+}
+
+function renderAll() {
+  if (!state) return;
+
+  // mode badge
+  const badge = document.getElementById('mode-badge');
+  if (state.mode === 'master') {
+    badge.textContent = '師匠戦モード';
+    badge.className = 'mode-badge master';
+  } else {
+    badge.textContent = '弟子戦モード';
+    badge.className = 'mode-badge disciple';
+  }
+
+  document.getElementById('match-counter').textContent = `第${state.match_count}試合`;
+
+  renderParticipants();
+  renderAppearances();
+  renderHistory();
+  if (state.current_match) {
+    renderCurrentMatch(state.current_match);
+  }
+}
+
+function renderParticipants() {
+  const ul = document.getElementById('participant-list');
+  const masters = state.participants.filter(p => p.role === 'master');
+  const disciples = state.participants.filter(p => p.role === 'disciple');
+  const sorted = [...masters, ...disciples];
+  ul.innerHTML = sorted.map(p => `
+    <li class="participant-item">
+      <span class="name">${p.name}</span>
+      <span class="tag ${p.role}">${p.role === 'master' ? '師匠' : '弟子'}</span>
+      <span class="appearances">${p.appearances}回</span>
+      <button class="del-btn" onclick="deleteParticipant('${p.name}')" title="削除">×</button>
+    </li>
+  `).join('');
+}
+
+function renderAppearances() {
+  const ul = document.getElementById('appearances-list');
+  if (!state.participants.length) { ul.innerHTML = '<li style="color:var(--muted);font-size:12px;">参加者なし</li>'; return; }
+  const max = Math.max(...state.participants.map(p => p.appearances), 1);
+  const sorted = [...state.participants].sort((a, b) => b.appearances - a.appearances);
+  ul.innerHTML = sorted.map(p => `
+    <li class="appear-item ${p.role}-row">
+      <span class="tag ${p.role}" style="font-size:9px;padding:1px 5px;">${p.role === 'master' ? '師' : '弟'}</span>
+      <span style="min-width:80px;font-weight:600;">${p.name}</span>
+      <div class="bar-wrap"><div class="bar" style="width:${(p.appearances/max*100).toFixed(1)}%"></div></div>
+      <span class="appear-count">${p.appearances}</span>
+    </li>
+  `).join('');
+}
+
+function renderHistory() {
+  const ul = document.getElementById('history-list');
+  if (!state.match_history.length) { ul.innerHTML = '<li style="color:var(--muted);font-size:12px;padding:4px 8px;">履歴なし</li>'; return; }
+  ul.innerHTML = [...state.match_history].reverse().map(h => {
+    const t = h.type === 'master' ? '師匠戦' : '弟子戦';
+    const w1 = h.winner === 1 ? '<span class="winner-mark">★</span>' : '';
+    const w2 = h.winner === 2 ? '<span class="winner-mark">★</span>' : '';
+    return `<li class="history-item">
+      #${h.match_no} [${t}] ${w1}${h.team1.join('・')} vs ${w2}${h.team2.join('・')}
+    </li>`;
+  }).join('');
+}
+
+function renderCurrentMatch(match) {
+  currentMatch = match;
+  const typeLabel = match.type === 'master' ? '師匠戦' : '弟子戦';
+  const t1color = match.type === 'master' ? 'var(--master)' : 'var(--blue)';
+  const t2color = match.type === 'master' ? 'var(--purple)' : 'var(--disciple)';
+
+  document.getElementById('current-match-area').innerHTML = `
+    <div class="current-match-card">
+      <div class="match-label">${typeLabel} — 第${state.match_count + 1}試合（予定）</div>
+      <div class="teams">
+        <div class="team-box" style="border-top:2px solid ${t1color}">
+          <h3 style="color:${t1color}">チーム 1</h3>
+          <div class="players">
+            ${match.team1.map(n => `<span class="player-name">${n}</span>`).join('')}
+          </div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="team-box" style="border-top:2px solid ${t2color}">
+          <h3 style="color:${t2color}">チーム 2</h3>
+          <div class="players">
+            ${match.team2.map(n => `<span class="player-name">${n}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('confirm-area').style.display = 'flex';
+  document.getElementById('winner-select').innerHTML = `
+    <option value="1">チーム1 (${match.team1.join(' / ')})</option>
+    <option value="2">チーム2 (${match.team2.join(' / ')})</option>
+  `;
+}
+
+async function addParticipant() {
+  const name = document.getElementById('p-name').value.trim();
+  const role = document.getElementById('p-role').value;
+  if (!name) { toast('名前を入力してください', false); return; }
+  try {
+    await api('/api/participants', 'POST', { name, role });
+    document.getElementById('p-name').value = '';
+    toast(`${name} を追加しました`);
+    await loadState();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function deleteParticipant(name) {
+  if (!confirm(`${name} を削除しますか？`)) return;
+  try {
+    await api(`/api/participants/${encodeURIComponent(name)}`, 'DELETE');
+    toast(`${name} を削除しました`);
+    await loadState();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function nextDisciple() {
+  try {
+    const match = await api('/api/match/next-disciple', 'POST');
+    state.current_match = match;
+    renderCurrentMatch(match);
+    toast('弟子戦メンバーを決定しました');
+  } catch(e) { toast(e.message, false); }
+}
+
+async function nextMaster() {
+  try {
+    const match = await api('/api/match/next-master', 'POST');
+    state.current_match = match;
+    renderCurrentMatch(match);
+    toast('師匠戦メンバーを決定しました');
+  } catch(e) { toast(e.message, false); }
+}
+
+async function confirmMatch() {
+  if (!currentMatch) { toast('試合メンバーを先に決定してください', false); return; }
+  const winner = parseInt(document.getElementById('winner-select').value);
+  try {
+    const r = await api('/api/match/confirm', 'POST', {
+      winner_team: winner,
+      team1: currentMatch.team1,
+      team2: currentMatch.team2,
+      match_type: currentMatch.type
+    });
+    toast(`第${r.match_no}試合を確定しました`);
+    document.getElementById('confirm-area').style.display = 'none';
+    document.getElementById('current-match-area').innerHTML = `
+      <div style="color:var(--green);font-size:13px;padding:20px;text-align:center;">
+        ✓ 第${r.match_no}試合を記録しました。次の試合メンバーを決定してください。
+      </div>`;
+    currentMatch = null;
+    await loadState();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function setMode(mode) {
+  try {
+    await api('/api/mode', 'POST', { mode });
+    toast(mode === 'master' ? '師匠戦モードに切り替えました' : '弟子戦モードに切り替えました');
+    await loadState();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function resetAll() {
+  if (!confirm('全データをリセットします。よろしいですか？')) return;
+  try {
+    await api('/api/reset', 'POST');
+    currentMatch = null;
+    document.getElementById('current-match-area').innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center;">↑ ボタンを押すと次の試合メンバーが表示されます</div>`;
+    document.getElementById('confirm-area').style.display = 'none';
+    toast('リセットしました');
+    await loadState();
+  } catch(e) { toast(e.message, false); }
+}
+
+// Enter key for participant input
+document.getElementById('p-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addParticipant();
+});
+
+// Excel import
+document.getElementById('import-label').addEventListener('click', () => {
+  document.getElementById('excel-file').click();
+});
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('import-label').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) importExcel(file);
+}
+
+document.getElementById('import-label').addEventListener('dragover', () => {
+  document.getElementById('import-label').classList.add('drag-over');
+});
+document.getElementById('import-label').addEventListener('dragleave', () => {
+  document.getElementById('import-label').classList.remove('drag-over');
+});
+
+async function importExcel(file) {
+  if (!file) return;
+  const label = document.getElementById('import-label');
+  label.querySelector('span').textContent = '読み込み中...';
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    const r = await fetch('/api/import-excel', { method: 'POST', body: form });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ detail: r.statusText }));
+      throw new Error(err.detail || r.statusText);
+    }
+    const result = await r.json();
+    const addedMsg = result.added.map(p => `${p.name}(${p.role === 'master' ? '師匠' : '弟子'})`).join('、');
+    const skipMsg = result.skipped.length ? `（${result.skipped.join('、')} はスキップ）` : '';
+    toast(`${result.added.length}人を追加しました: ${addedMsg}${skipMsg}`);
+    await loadState();
+  } catch(e) {
+    toast(e.message, false);
+  } finally {
+    label.querySelector('span').textContent = '📋 Excelファイルをドロップ';
+    document.getElementById('excel-file').value = '';
+  }
+}
+
+loadState();
+</script>
+</body>
+</html>
