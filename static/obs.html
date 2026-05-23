@@ -6,19 +6,24 @@
 <title>師匠弟子杯 OBS表示</title>
 <style>
   :root {
-    --bg: #0d1117;
-    --blue: #58a6ff;
-    --disciple: #38bdf8;
-    --master: #f97316;
-    --purple: #bc8cff;
-    --green: #3fb950;
     --text: #e6edf3;
     --muted: #8b949e;
-    --border: #30363d;
-    --bg2: #161b22;
-    --bg3: #21262d;
+    /* 弟子戦カラー */
+    --d-bg-from: #0d1117;
+    --d-bg-to: #1a2332;
+    --d-team1: #38bdf8;
+    --d-team2: #bc8cff;
+    --d-label: #38bdf8;
+    /* 師匠戦カラー */
+    --m-bg-from: #1a0a00;
+    --m-bg-to: #0d1117;
+    --m-team1: #f97316;
+    --m-team2: #fbbf24;
+    --m-label: #f97316;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
     background: transparent;
     color: var(--text);
@@ -26,304 +31,179 @@
     width: 1280px;
     height: 720px;
     overflow: hidden;
-    position: relative;
   }
 
-  /* ========== 弟子戦モード ========== */
-  #disciple-view {
-    width: 100%; height: 100%;
-    background: linear-gradient(135deg, #0d1117 0%, #1a2332 100%);
+  /* ===== 共通レイアウト ===== */
+  #view {
+    width: 1280px;
+    height: 720px;
     display: flex;
     flex-direction: column;
-    padding: 24px;
-    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    padding: 48px;
+    transition: background 0.4s ease;
   }
 
+  /* ===== ヘッダー ===== */
   .obs-header {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .obs-title {
-    font-size: 14px;
-    color: var(--muted);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+  .mode-label {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    padding: 5px 18px;
+    border-radius: 4px;
+    border: 1px solid currentColor;
   }
-  .obs-match-no {
+  .match-no {
     font-size: 28px;
     font-weight: 900;
-    color: var(--disciple);
     letter-spacing: 0.06em;
   }
-  .obs-match-no span { font-size: 14px; font-weight: 400; color: var(--muted); margin-right: 4px; }
+  .match-no .unit { font-size: 14px; font-weight: 400; color: var(--muted); }
 
-  /* 現在の試合 */
-  .current-battle {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 16px;
-    align-items: center;
-  }
-  .team-card {
-    background: rgba(255,255,255,0.04);
-    border-radius: 12px;
-    padding: 14px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .team-card.team1 { border-top: 3px solid var(--disciple); }
-  .team-card.team2 { border-top: 3px solid var(--purple); }
-  .team-label {
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-weight: 700;
-  }
-  .team-card.team1 .team-label { color: var(--disciple); }
-  .team-card.team2 .team-label { color: var(--purple); }
-  .team-players { display: flex; flex-direction: column; gap: 8px; }
-  .player-tag {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: 0.02em;
-  }
-  .vs-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .vs-text {
-    font-size: 36px;
-    font-weight: 900;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
-
-  /* 弟子出場回数バー */
-  .appearances-bar {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .appearances-bar h3 {
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 4px;
-  }
-  .appear-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-  }
-  .appear-name {
-    min-width: 90px;
-    font-weight: 600;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .appear-name.playing { color: var(--disciple); }
-  .bar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; background: var(--disciple); }
-  .bar-fill.playing { background: var(--green); }
-  .appear-num { min-width: 20px; text-align: right; color: var(--muted); font-size: 11px; }
-
-  /* ========== 師匠戦モード ========== */
-  #master-view {
-    width: 100%; height: 100%;
-    background: linear-gradient(135deg, #1a0a00 0%, #2d1500 50%, #0d1117 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-  #master-view::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse at center, rgba(249,115,22,0.12) 0%, transparent 70%);
-  }
-  .master-badge {
-    font-size: 13px;
-    letter-spacing: 0.2em;
-    color: var(--master);
-    font-weight: 700;
-    border: 1px solid rgba(249,115,22,0.4);
-    padding: 6px 20px;
-    border-radius: 4px;
-    position: relative;
-  }
-  .master-title {
-    font-size: 52px;
-    font-weight: 900;
-    color: var(--master);
-    letter-spacing: 0.1em;
-    position: relative;
-    text-shadow: 0 0 40px rgba(249,115,22,0.5);
-  }
-  .master-teams {
+  /* ===== チームカード ===== */
+  .battle {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 24px;
     align-items: center;
-    width: 80%;
-    position: relative;
-  }
-  .master-team {
-    background: rgba(249,115,22,0.08);
-    border: 1px solid rgba(249,115,22,0.25);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-  }
-  .master-team h3 { font-size: 11px; color: var(--master); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
-  .master-player { font-size: 24px; font-weight: 800; color: var(--text); margin: 6px 0; }
-  .master-vs { font-size: 40px; font-weight: 900; color: rgba(249,115,22,0.5); }
-  .master-match-no { font-size: 14px; color: var(--muted); letter-spacing: 0.06em; position: relative; }
-
-  /* 試合なし表示 */
-  .no-match {
-    color: var(--muted);
-    font-size: 14px;
-    text-align: center;
     width: 100%;
-    padding: 20px;
+  }
+  .team-card {
+    border-radius: 14px;
+    padding: 28px 32px;
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .team-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+  }
+  .players {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .player-name {
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+  }
+  .vs {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+  .no-match {
+    font-size: 16px;
+    color: var(--muted);
+    padding: 12px 0;
   }
 
-  .hidden { display: none !important; }
+  /* ===== 弟子戦モード ===== */
+  #view.disciple {
+    background: linear-gradient(135deg, var(--d-bg-from) 0%, var(--d-bg-to) 100%);
+  }
+  #view.disciple .mode-label { color: var(--d-label); }
+  #view.disciple .match-no { color: var(--d-team1); }
+  #view.disciple .team-card.team1 { border-top: 3px solid var(--d-team1); }
+  #view.disciple .team-card.team2 { border-top: 3px solid var(--d-team2); }
+  #view.disciple .team-card.team1 .team-label { color: var(--d-team1); }
+  #view.disciple .team-card.team2 .team-label { color: var(--d-team2); }
+
+  /* ===== 師匠戦モード ===== */
+  #view.master {
+    background: linear-gradient(135deg, var(--m-bg-from) 0%, #2d1500 50%, var(--m-bg-to) 100%);
+  }
+  #view.master::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(249,115,22,0.1) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  #view.master .mode-label { color: var(--m-label); }
+  #view.master .match-no { color: var(--m-team1); }
+  #view.master .team-card.team1 { border-top: 3px solid var(--m-team1); }
+  #view.master .team-card.team2 { border-top: 3px solid var(--m-team2); }
+  #view.master .team-card.team1 .team-label { color: var(--m-team1); }
+  #view.master .team-card.team2 .team-label { color: var(--m-team2); }
+  #view.master .team-card {
+    background: rgba(249, 115, 22, 0.06);
+    border-color: rgba(249, 115, 22, 0.2);
+  }
 </style>
 </head>
 <body>
 
-<!-- 弟子戦モード -->
-<div id="disciple-view">
+<div id="view" class="disciple">
   <div class="obs-header">
-    <div class="obs-title">師匠弟子杯</div>
-    <div class="obs-match-no"><span>第</span><span id="d-match-no">--</span><span>試合</span></div>
+    <div class="mode-label" id="mode-label">弟子戦</div>
+    <div class="match-no">
+      <span class="unit">第</span><span id="match-no">--</span><span class="unit">試合</span>
+    </div>
   </div>
 
-  <div class="current-battle">
+  <div class="battle">
     <div class="team-card team1">
-      <div class="team-label">Team 1</div>
-      <div class="team-players" id="d-team1"></div>
+      <div class="team-label">TEAM 1</div>
+      <div class="players" id="team1"></div>
     </div>
-    <div class="vs-center">
-      <div class="vs-text">VS</div>
-    </div>
+    <div class="vs">VS</div>
     <div class="team-card team2">
-      <div class="team-label">Team 2</div>
-      <div class="team-players" id="d-team2"></div>
+      <div class="team-label">TEAM 2</div>
+      <div class="players" id="team2"></div>
     </div>
   </div>
-
-  <div class="appearances-bar">
-    <h3>出場回数</h3>
-    <div id="d-appearances"></div>
-  </div>
-</div>
-
-<!-- 師匠戦モード -->
-<div id="master-view" class="hidden">
-  <div class="master-badge">師匠対決</div>
-  <div class="master-title">師匠対決</div>
-  <div class="master-teams">
-    <div class="master-team">
-      <h3>Team 1</h3>
-      <div id="m-team1"></div>
-    </div>
-    <div class="master-vs">VS</div>
-    <div class="master-team">
-      <h3>Team 2</h3>
-      <div id="m-team2"></div>
-    </div>
-  </div>
-  <div class="master-match-no" id="m-match-no">第 -- 試合</div>
 </div>
 
 <script>
-let prevState = null;
-
 async function poll() {
   try {
     const state = await fetch('/api/state').then(r => r.json());
     render(state);
-    prevState = state;
   } catch(e) {
     console.error('poll error', e);
   }
 }
 
 function render(state) {
-  const dView = document.getElementById('disciple-view');
-  const mView = document.getElementById('master-view');
+  const view = document.getElementById('view');
+  const isMaster = state.mode === 'master';
 
-  if (state.mode === 'master') {
-    dView.classList.add('hidden');
-    mView.classList.remove('hidden');
-    renderMaster(state);
-  } else {
-    mView.classList.add('hidden');
-    dView.classList.remove('hidden');
-    renderDisciple(state);
-  }
-}
+  // モード切替
+  view.className = isMaster ? 'master' : 'disciple';
+  document.getElementById('mode-label').textContent = isMaster ? '師匠戦' : '弟子戦';
 
-function renderDisciple(state) {
+  // 試合番号
   const match = state.current_match;
   const matchNo = state.match_count + (match ? 1 : 0);
-  document.getElementById('d-match-no').textContent = matchNo;
+  document.getElementById('match-no').textContent = matchNo;
 
-  const t1 = document.getElementById('d-team1');
-  const t2 = document.getElementById('d-team2');
+  // チーム表示
+  const t1 = document.getElementById('team1');
+  const t2 = document.getElementById('team2');
 
-  if (match && match.type === 'disciple') {
-    t1.innerHTML = match.team1.map(n => `<div class="player-tag">${n}</div>`).join('');
-    t2.innerHTML = match.team2.map(n => `<div class="player-tag">${n}</div>`).join('');
-  } else if (match && match.type === 'master') {
-    t1.innerHTML = match.team1.map(n => `<div class="player-tag" style="color:var(--master)">${n}</div>`).join('');
-    t2.innerHTML = match.team2.map(n => `<div class="player-tag" style="color:var(--purple)">${n}</div>`).join('');
+  if (match) {
+    t1.innerHTML = match.team1.map(n => `<div class="player-name">${n}</div>`).join('');
+    t2.innerHTML = match.team2.map(n => `<div class="player-name">${n}</div>`).join('');
   } else {
     t1.innerHTML = '<div class="no-match">待機中...</div>';
     t2.innerHTML = '';
-  }
-
-  // appearances
-  const disciples = state.participants.filter(p => p.role === 'disciple');
-  const playing = match ? [...(match.team1 || []), ...(match.team2 || [])] : [];
-  const max = Math.max(...disciples.map(p => p.appearances), 1);
-  const sorted = [...disciples].sort((a, b) => b.appearances - a.appearances);
-  document.getElementById('d-appearances').innerHTML = sorted.map(p => {
-    const isPlaying = playing.includes(p.name);
-    return `<div class="appear-row">
-      <span class="appear-name ${isPlaying ? 'playing' : ''}">${isPlaying ? '▶ ' : ''}${p.name}</span>
-      <div class="bar-track"><div class="bar-fill ${isPlaying ? 'playing' : ''}" style="width:${(p.appearances/max*100).toFixed(1)}%"></div></div>
-      <span class="appear-num">${p.appearances}</span>
-    </div>`;
-  }).join('');
-}
-
-function renderMaster(state) {
-  const match = state.current_match;
-  const matchNo = state.match_count + (match ? 1 : 0);
-  document.getElementById('m-match-no').textContent = `第 ${matchNo} 試合`;
-
-  if (match) {
-    document.getElementById('m-team1').innerHTML = match.team1.map(n => `<div class="master-player">${n}</div>`).join('');
-    document.getElementById('m-team2').innerHTML = match.team2.map(n => `<div class="master-player">${n}</div>`).join('');
-  } else {
-    document.getElementById('m-team1').innerHTML = '<div class="master-player" style="color:var(--muted)">---</div>';
-    document.getElementById('m-team2').innerHTML = '<div class="master-player" style="color:var(--muted)">---</div>';
   }
 }
 
