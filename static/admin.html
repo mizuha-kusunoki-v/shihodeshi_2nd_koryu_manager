@@ -345,14 +345,18 @@ function renderHistory() {
 }
 
 function renderCurrentMatch(match) {
-  currentMatch = match;
+  const confirmed = !!match.confirmed;
+  currentMatch = confirmed ? null : match;
   const typeLabel = match.type === 'master' ? '師匠戦' : '弟子戦';
   const t1color = match.type === 'master' ? 'var(--master)' : 'var(--blue)';
   const t2color = match.type === 'master' ? 'var(--purple)' : 'var(--disciple)';
+  const statusLabel = confirmed
+    ? `<span style="color:var(--green);font-weight:700;"> ✓ 確定済み</span>`
+    : '';
 
   document.getElementById('current-match-area').innerHTML = `
     <div class="current-match-card">
-      <div class="match-label">${typeLabel} — 第${state.match_count + 1}試合（予定）</div>
+      <div class="match-label">${typeLabel} — 第${match.match_no}試合${statusLabel}</div>
       <div class="teams">
         <div class="team-box" style="border-top:2px solid ${t1color}">
           <h3 style="color:${t1color}">チーム 1</h3>
@@ -370,11 +374,17 @@ function renderCurrentMatch(match) {
       </div>
     </div>
   `;
-  document.getElementById('confirm-area').style.display = 'flex';
-  document.getElementById('winner-select').innerHTML = `
-    <option value="1">チーム1 (${match.team1.join(' / ')})</option>
-    <option value="2">チーム2 (${match.team2.join(' / ')})</option>
-  `;
+
+  const confirmArea = document.getElementById('confirm-area');
+  if (confirmed) {
+    confirmArea.style.display = 'none';
+  } else {
+    confirmArea.style.display = 'flex';
+    document.getElementById('winner-select').innerHTML = `
+      <option value="1">チーム1 (${match.team1.join(' / ')})</option>
+      <option value="2">チーム2 (${match.team2.join(' / ')})</option>
+    `;
+  }
 }
 
 async function addParticipant() {
@@ -427,13 +437,7 @@ async function confirmMatch() {
       match_type: currentMatch.type
     });
     toast(`第${r.match_no}試合を確定しました`);
-    document.getElementById('confirm-area').style.display = 'none';
-    document.getElementById('current-match-area').innerHTML = `
-      <div style="color:var(--green);font-size:13px;padding:20px;text-align:center;">
-        ✓ 第${r.match_no}試合を記録しました。次の試合メンバーを決定してください。
-      </div>`;
-    currentMatch = null;
-    await loadState();
+    await loadState(); // renderAllでconfirmed表示に切り替わる
   } catch(e) { toast(e.message, false); }
 }
 

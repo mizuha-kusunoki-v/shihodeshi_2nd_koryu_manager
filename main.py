@@ -198,6 +198,8 @@ def next_disciple():
     match = _pick_next_disciple(state)
     if match is None:
         raise HTTPException(400, "弟子が4人以上必要です")
+    state["match_count"] += 1
+    match["match_no"] = state["match_count"]
     state["current_match"] = match
     state["mode"] = "disciple"  # 抽選と同時にモード切替
     save_state(state)
@@ -210,6 +212,8 @@ def next_master():
     match = _pick_next_master(state)
     if match is None:
         raise HTTPException(400, "師匠が2人以上必要です")
+    state["match_count"] += 1
+    match["match_no"] = state["match_count"]
     state["current_match"] = match
     state["mode"] = "master"  # 抽選と同時にモード切替
     save_state(state)
@@ -219,22 +223,25 @@ def next_master():
 @app.post("/api/match/confirm")
 def confirm_match(body: MatchConfirm):
     state = load_state()
-    state["match_count"] += 1
+    # match_countは抽選時にインクリメント済み
+    match_no = state["current_match"]["match_no"] if state["current_match"] else state["match_count"]
     all_players = body.team1 + body.team2
     for p in state["participants"]:
         if p["name"] in all_players:
             p["appearances"] += 1
     history_entry = {
-        "match_no": state["match_count"],
+        "match_no": match_no,
         "type": body.match_type,
         "team1": body.team1,
         "team2": body.team2,
         "winner": body.winner_team,
     }
     state["match_history"].append(history_entry)
-    state["current_match"] = None
+    # OBS表示を維持するためcurrent_matchは消さずconfirmedフラグのみ立てる
+    if state["current_match"]:
+        state["current_match"]["confirmed"] = True
     save_state(state)
-    return {"ok": True, "match_no": state["match_count"]}
+    return {"ok": True, "match_no": match_no}
 
 
 @app.post("/api/mode")

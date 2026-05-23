@@ -189,9 +189,9 @@ function render(state) {
   view.className = isMaster ? 'master' : 'disciple';
   document.getElementById('mode-label').textContent = isMaster ? '師匠戦' : '弟子戦';
 
-  // 試合番号
+  // 試合番号（抽選時にmatch_noが確定済み）
   const match = state.current_match;
-  const matchNo = state.match_count + (match ? 1 : 0);
+  const matchNo = match ? match.match_no : state.match_count;
   document.getElementById('match-no').textContent = matchNo;
 
   // チーム表示
