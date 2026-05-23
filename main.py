@@ -199,6 +199,7 @@ def next_disciple():
     if match is None:
         raise HTTPException(400, "弟子が4人以上必要です")
     state["current_match"] = match
+    state["mode"] = "disciple"  # 抽選と同時にモード切替
     save_state(state)
     return match
 
@@ -210,6 +211,7 @@ def next_master():
     if match is None:
         raise HTTPException(400, "師匠が2人以上必要です")
     state["current_match"] = match
+    state["mode"] = "master"  # 抽選と同時にモード切替
     save_state(state)
     return match
 
